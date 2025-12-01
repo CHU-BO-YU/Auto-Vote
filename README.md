@@ -1,161 +1,191 @@
-# 🤖 Youth Dream 自動投票機器人 (Auto Voting Bot)
+# 自動投票機器人使用說明
 
-這是一個基於 **Python + Selenium** 開發的自動化投票工具，專為 **Youth Dream 平台**設計。具備自動登入、2Captcha 驗證碼破解、多執行緒併發處理，以及支援多個投票目標的功能。
-
----
-
-## ✨ 主要功能
-
-### 🚀 高效能併發
-
-* 支援 **多執行緒 (Multithreading)**
-* 可同時開啟多個瀏覽器視窗進行投票
-* 大幅縮短投票時間
-
-### 🛡️ 驗證碼破解
-
-* 整合 **2Captcha API**
-* 自動識別登入驗證碼並填入
-
-### 👻 雙模式執行
-
-* **前台模式**：顯示瀏覽器視窗，方便觀察與除錯
-* **無頭模式（Headless）**：背景靜默執行、降低資源消耗
-
-### 🎯 多目標支援
-
-* 可設定多個投票網址
-* 程式會依序完成所有目標的投票
-
-### 📸 智慧截圖
-
-* 投票成功後自動**滾動至頁面底部截圖**
-* 依據不同投票網址自動建立資料夾：
-
-  * `Target_1/`
-  * `Target_2/`
-  * …依此類推
-
-### 🔧 設定分離
-
-* 敏感資料（API Key）與一般設定分離
-* 管理更安全、維護更方便
+本工具用於自動化跑投票流程，包含自動登入、解析 CAPTCHA、投票與截圖。本說明將逐步引導你完成環境設定與操作。
 
 ---
 
-## 📂 檔案結構
+# 0. 取得本專案
 
-請確保資料夾內包含以下檔案：
+## 方法一：使用 Git 下載（推薦）
 
-| 檔案名稱               | 用途說明                                |
-| ------------------ | ----------------------------------- |
-| `main.py`          | 🐍 程式核心邏輯代碼                         |
-| `.env`             | 🔑 私密設定（放置 2Captcha API Key）        |
-| `config.ini`       | ⚙️ 一般設定（網址、執行緒數量、瀏覽器模式）             |
-| `accounts.csv`     | 👥 帳號密碼清單                           |
-| `chromedriver.exe` | 🌐 Chrome WebDriver（需與 Chrome 版本相符） |
-| `install.bat`      | 📦 一鍵安裝 Python 套件                   |
-| `run.bat`          | ▶️ 一鍵執行程式                           |
+```bash
+git clone https://github.com/你的帳號/你的專案.git
+cd 你的專案
+```
 
----
+## 方法二：下載 ZIP
 
-## 🛠️ 安裝與設定教學
+1. 前往 GitHub 專案頁
+2. 點擊 **Code** → **Download ZIP**
+3. 解壓縮後即可使用
 
-### 1. 環境準備
-
-1. 安裝 **Python 3.x**（記得勾選 *Add Python to PATH*）
-2. 下載符合您 **Chrome 版本**的 ChromeDriver 並放入專案資料夾
+所有檔案（chromedriver.exe、install.bat、run.bat 等）皆已包含在專案內，不需移動或修改路徑。
 
 ---
 
-### 2. 安裝套件
+# 1. 環境準備
 
-雙擊 `install.bat`
-等待顯示 **「所有套件安裝成功」** 即完成。
+## 安裝 Python
+
+請至 Python 官方網站下載並安裝（安裝時務必勾選 Add Python to PATH）：
+[https://www.python.org/downloads/](https://www.python.org/downloads/)
+
+## ChromeDriver
+
+本專案已附上 `chromedriver.exe`，無需下載額外檔案。
 
 ---
 
-### 3. 準備帳號（accounts.csv）
+# 2. 初始設定
 
-建立一個 CSV，格式如下（第一列為標題，程式會自動跳過）：
+## 2.1 安裝套件
+
+在專案資料夾中執行：
+
+```
+install.bat
+```
+
+程式會自動安裝所需的 Python 套件。
+
+---
+
+## 2.2 設定帳號
+
+本程式會從 `accounts.csv` 讀取帳密。
+請依以下格式填寫：
 
 ```csv
 email,password
-user1@example.com,password123
-user2@example.com,password456
+user1@test.com,pass123
+user2@test.com,pass456
+```
+
+可新增多組帳號，一行一組。
+
+---
+
+## 2.3 設定 2Captcha API 金鑰
+
+前往 2Captcha 註冊並儲值：
+[https://2captcha.com/](https://2captcha.com/)
+
+取得 API Key 後，填入 `.env` 檔：
+
+```env
+CAPTCHA_API_KEY=你的_API_KEY
 ```
 
 ---
 
-### 4. 設定金鑰（.env）
+# 3. 設定 config.ini
 
-編輯 `.env`：
-
-```
-CAPTCHA_API_KEY=你的_2Captcha_API_Key
-```
-
----
-
-### 5. 調整參數（config.ini）
-
-`config.ini` 檔案可用來設定程式行為：
+以下為完整的 `config.ini`，可直接使用，不需調整路徑。
 
 ```ini
 [Browser]
-# True = 隱藏視窗（背景執行）, False = 顯示視窗
+DriverPath = chromedriver.exe
 Headless = False
 
 [Performance]
-# 同時開啟的瀏覽器視窗數
 MaxWorkers = 2
+MaxLoginRetries = 5
+
+[Data]
+AccountsFile = accounts.csv
 
 [Urls]
-# 投票網址清單（移除不需投票的網址即可）
+LoginUrl = https://youthdream.phdf.org.tw/member/login
+
 TargetUrls = 
-    https://website.com/vote/project_A
-    https://website.com/vote/project_B
+    # 寒服專案網址
+    https://youthdream.phdf.org.tw/project/show?keyword=%E7%9C%9F%E7%9B%B8%E5%8F%AA%E6%9C%89%E4%B8%80%E5%80%8B%21%E4%B8%AD%E8%8A%B8%E5%81%B5%E6%8E%A2%E5%9C%98%E4%BA%8B%E4%BB%B6%E7%B0%BF&page=1
+
+    # Maker 專案網址
+    https://youthdream.phdf.org.tw/project/show?keyword=maker&page=1
 ```
 
 ---
 
-## ▶️ 如何使用
+## 3.1 如何新增投票網址
 
-1. 確認上述設定皆已完成
-2. 雙擊 `run.bat`
-3. 程式會自動開啟瀏覽器並開始投票
-4. 完成後視窗會提示 **「所有作業結束」**
+只需在 TargetUrls 下面加入一行（注意縮排）：
 
----
-
-## 📁 輸出結果
-
-所有截圖會儲存於 `screenshots` 資料夾，並依目標分類：
-
-* `screenshots/Target_1/`
-* `screenshots/Target_2/`
-
-檔名格式：
-
-```
-帳號_success_日期時間.png
+```ini
+TargetUrls =
+    https://...(寒服)
+    https://...(maker)
+    https://youthdream.phdf.org.tw/project/show?keyword=robot&page=1
 ```
 
----
-
-## ⚠️ 注意事項
-
-* **ChromeDriver 版本需與 Chrome 相符**
-  Chrome 自動更新後，若版本不符需重新下載。
-* **2Captcha 需消耗點數**
-  請確認帳戶餘額足夠。
-* **執行速度受電腦效能影響**
-  RAM 較低可調整 `MaxWorkers = 1` 或 `2`。
+縮排至少四個空格非常重要，否則程式無法讀取。
 
 ---
 
-## 📜 免責聲明
+## 3.2 如何刪除不需要的網址
 
-本工具僅供 **技術研究** 與 **自動化測試教學用途**。
-請勿用於任何違反法律或目標網站使用條款之行為。
-使用者需自行承擔因使用本工具所產生之所有後果。
+如果你不想投某一個項目，只要將那一行（含註解）刪除即可，例如：
+
+```ini
+TargetUrls =
+    # Maker 專案網址
+    https://youthdream.phdf.org.tw/project/show?keyword=maker&page=1
+```
+
+---
+
+## 3.3 Headless 模式（隱藏瀏覽器）
+
+如需隱藏視窗，將：
+
+```ini
+Headless = False
+```
+
+改為：
+
+```ini
+Headless = True
+```
+
+---
+
+# 4. 開始執行程式
+
+在專案資料夾中執行：
+
+```
+run.bat
+```
+
+程式將會：
+
+1. 讀取帳號
+2. 逐一登入
+3. 處理 2Captcha
+4. 自動投票
+5. 截圖存入 `screenshots/`
+
+執行完畢會自動結束。
+
+---
+
+# 5. 常見問題（FAQ）
+
+### 程式無法登入？
+
+* 檢查帳號密碼是否正確
+* 檢查 2Captcha 餘額是否足夠
+* 網站可能暫時維護，可稍後再試
+
+### 顯示找不到 chromedriver？
+
+本專案已內附 `chromedriver.exe`，請確保你沒有手動移動或刪除。
+
+### 投票網址讀不到？
+
+請檢查：
+
+* 是否有縮排
+* 每行是否都是完整的 URL
+* 不要在 TargetUrls= 同一行放網址
